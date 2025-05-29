@@ -28,10 +28,30 @@ public class PaymentController {
         return ResponseEntity.ok("Payment successful and ticket generated.");
     }
 
-    @PostMapping("/{paymentId}/refund")
-    public ResponseEntity<Payment> refund(@PathVariable String paymentId, @RequestBody Map<String, String> payload) {
-        String reason = payload.getOrDefault("reason", "No reason provided");
-        Payment refunded = paymentSvc.refundPayment(paymentId, reason);
-        return ResponseEntity.ok(refunded);
+    @PostMapping("/{registrationId}/refund")
+    public ResponseEntity<Payment> refundByOrganizer(@PathVariable String registrationId,
+            @RequestBody Map<String, String> payload) {
+        String reason = payload.getOrDefault("reason", "Organizer-initiated refund");
+        return ResponseEntity.ok(paymentSvc.refundByOrganizer(registrationId, reason));
     }
+
+    @PostMapping("/{registrationId}/request-refund")
+    public ResponseEntity<Payment> requestRefund(@PathVariable String registrationId,
+            @RequestBody Map<String, String> payload) {
+        String reason = payload.getOrDefault("reason", "No reason provided");
+        return ResponseEntity.ok(paymentSvc.requestRefund(registrationId, reason));
+    }
+
+    @PutMapping("/{registrationId}/approve-refund")
+    public ResponseEntity<Payment> approveRefund(@PathVariable String registrationId) {
+        Payment approvedRefund = paymentSvc.approveRefund(registrationId);
+        return ResponseEntity.ok(approvedRefund);
+    }
+
+    @PutMapping("/{registrationId}/reject-refund")
+    public ResponseEntity<Payment> rejectRefund(@PathVariable String registrationId) {
+        Payment rejectedRefund = paymentSvc.rejectRefund(registrationId);
+        return ResponseEntity.ok(rejectedRefund);
+    }
+
 }

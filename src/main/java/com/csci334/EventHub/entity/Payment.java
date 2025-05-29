@@ -3,6 +3,8 @@ package com.csci334.EventHub.entity;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
+import com.csci334.EventHub.entity.enums.RefundStatus;
+import com.csci334.EventHub.entity.enums.RegistrationStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.*;
@@ -19,6 +21,12 @@ public class Payment {
     private String transactionId;
     private String cardLastFour;
     private LocalDateTime paidAt;
+    @Enumerated(EnumType.STRING)
+    private RefundStatus refundStatus = RefundStatus.NONE;
+
+    @Column(columnDefinition = "TEXT")
+    private String refundReason;
+
     private LocalDateTime refundedAt;
     private String status; // e.g., "SUCCESS", "FAILED"
 
@@ -31,6 +39,14 @@ public class Payment {
 
     public void setCardLastFour(String cardLastFour) {
         this.cardLastFour = cardLastFour;
+    }
+
+    public void setRefundStatus(RefundStatus refundStatus) {
+        this.refundStatus = refundStatus;
+    }
+
+    public void setRefundReason(String refundReason) {
+        this.refundReason = refundReason;
     }
 
     @PrePersist

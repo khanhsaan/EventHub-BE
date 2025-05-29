@@ -5,8 +5,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.csci334.EventHub.entity.Event;
 import com.csci334.EventHub.entity.Registration;
+import com.csci334.EventHub.entity.Ticket;
 import com.csci334.EventHub.entity.User;
 import com.csci334.EventHub.entity.enums.RegistrationStatus;
+import com.csci334.EventHub.entity.enums.TicketStatus;
 import com.csci334.EventHub.entity.enums.TicketType;
 import com.csci334.EventHub.repository.EventRepository;
 import com.csci334.EventHub.repository.RegistrationRepository;
@@ -71,7 +73,7 @@ public class RegistrationService {
             dto.setFullName(registration.getAttendee().getFullName());
             dto.setTicketRequested(registration.getRequestedTicketType());
             dto.setRegistrationStatus(registration.getStatus());
-
+            dto.setAmountDue(registration.getAmountDue());
             dtos.add(dto);
         }
 
@@ -88,6 +90,27 @@ public class RegistrationService {
         }
 
         registration.setStatus(RegistrationStatus.APPROVED);
+
+        if (registration.getAmountDue() == 0.0) {
+            registration.setStatus(RegistrationStatus.PAID);
+
+            Ticket ticket = new Ticket();
+            ticket.setTicketType(registration.getRequestedTicketType());
+            ticket.setStatus(TicketStatus.ISSUED);
+            ticket.setRegistration(registration);
+            registration.setTicket(ticket);
+
+            // Adjust event capacity
+            Event event = registration.getEvent();
+            if (registration.getRequestedTicketType() == TicketType.VIP) {
+                event.setVipTicketsRemaining(event.getVipTicketsRemaining() - 1);
+            } else {
+                event.setGeneralTicketsRemaining(event.getGeneralTicketsRemaining() - 1);
+            }
+
+            eventRepo.save(event);
+        }
+
         return repo.save(registration);
     }
 
@@ -121,6 +144,9 @@ public class RegistrationService {
             dto.setAmountDue(registration.getAmountDue());
             if (registration.getTicket() != null) {
                 dto.setTicketCode(registration.getTicket().getTicketCode());
+            }
+            if (registration.getPayment() != null) {
+                dto.setCardLastFour(registration.getPayment().getCardLastFour());
             }
 
             dtos.add(dto);

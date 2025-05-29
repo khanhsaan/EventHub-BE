@@ -5,5 +5,6 @@ public enum RegistrationStatus {
     APPROVED,
     REJECTED,
     PAID,
+    REFUND_REQUESTED,
     REFUNDED,
 }

@@ -16,5 +16,6 @@ public class RegistrationOutDTO {
     private String email;
     private TicketType ticketRequested;
     private RegistrationStatus registrationStatus;
+    private double amountDue;
 
 }

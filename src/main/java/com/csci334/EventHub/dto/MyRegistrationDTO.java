@@ -19,4 +19,5 @@ public class MyRegistrationDTO {
     private double amountDue;
     private RegistrationStatus status;
     private String ticketCode;
+    private String cardLastFour;
 }
