@@ -35,6 +35,7 @@ public class User {
     private List<Registration> registrations;
 
     @OneToMany(mappedBy = "recipient")
+    @JsonManagedReference(value = "user-notification")
     private List<Notification> notifications;
 
     private LocalDateTime createdAt;

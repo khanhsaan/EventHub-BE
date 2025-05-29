@@ -14,6 +14,7 @@ import com.csci334.EventHub.dto.EventCreationDTO;
 import com.csci334.EventHub.dto.EventEditDTO;
 import com.csci334.EventHub.dto.EventOutDTO; // Import the new DTO
 import com.csci334.EventHub.entity.Event;
+import com.csci334.EventHub.entity.Notification;
 import com.csci334.EventHub.entity.Payment;
 import com.csci334.EventHub.entity.Registration;
 import com.csci334.EventHub.entity.User;
@@ -23,6 +24,7 @@ import com.csci334.EventHub.entity.enums.RefundStatus;
 import com.csci334.EventHub.entity.enums.RegistrationStatus;
 import com.csci334.EventHub.entity.enums.TicketStatus;
 import com.csci334.EventHub.repository.EventRepository;
+import com.csci334.EventHub.repository.NotificationRepository;
 import com.csci334.EventHub.repository.PaymentRepository;
 import com.csci334.EventHub.repository.RegistrationRepository;
 import com.csci334.EventHub.repository.UserRepository;
@@ -42,17 +44,22 @@ public class EventService {
     private final UserRepository userRepository;
     private final RegistrationRepository registrationRepository;
     private final PaymentRepository paymentRepository;
+    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
     private static final Logger log = LoggerFactory.getLogger(EventService.class);
     private final SimpMessagingTemplate messaging;
 
     public EventService(EventRepository eventRepository, UserRepository userRepository,
             RegistrationRepository registrationRepository, PaymentRepository paymentRepository,
+            NotificationRepository notificationRepository, NotificationService notificationService,
             PasswordEncoder passwordEncoder, SimpMessagingTemplate messagingTemplate) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.registrationRepository = registrationRepository;
+        this.notificationRepository = notificationRepository;
         this.paymentRepository = paymentRepository;
+        this.notificationService = notificationService;
         this.passwordEncoder = passwordEncoder;
         this.messaging = messagingTemplate;
     }
@@ -233,7 +240,28 @@ public class EventService {
                     paymentRepository.save(payment);
                     registrationRepository.save(reg);
                 }
+            } else {
+                reg.setStatus(RegistrationStatus.CANCELLED);
+                reg.getTicket().setStatus(TicketStatus.EXPIRED);
+                registrationRepository.save(reg);
             }
+
+            User recipient = reg.getAttendee();
+
+            Notification notification = new Notification();
+            notification.setTitle("Event Cancelled: " + event.getTitle());
+            notification.setMessage("The event '" + event.getTitle() + "' scheduled on " + event.getEventDate()
+                    + " has been cancelled.");
+            notification.setRecipient(recipient);
+            notification.setEvent(event);
+            notification.setSentAt(LocalDateTime.now());
+            notification.setRead(false);
+
+            notificationRepository.save(notification);
+
+            messaging.convertAndSend("/topic/notifications/" + recipient.getId(),
+                    notificationService.convertToDto(notification));
+
         }
 
         // 7. Notify subscribers

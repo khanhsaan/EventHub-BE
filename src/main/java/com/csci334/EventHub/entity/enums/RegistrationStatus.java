@@ -7,4 +7,5 @@ public enum RegistrationStatus {
     PAID,
     REFUND_REQUESTED,
     REFUNDED,
+    CANCELLED
 }

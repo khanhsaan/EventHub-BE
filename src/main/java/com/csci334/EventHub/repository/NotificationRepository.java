@@ -7,11 +7,13 @@ import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     // Unread notifications for a user
-    List<Notification> findByRecipient_IdAndIsReadFalse(String recipientId);
+    List<Notification> findByRecipientIdAndIsReadFalse(String recipientId);
 
     // All notifications for a user, sorted newest first
-    List<Notification> findByRecipient_IdOrderBySentAtDesc(String recipientId);
+    List<Notification> findByRecipientIdOrderBySentAtDesc(String recipientId);
 
     // Notifications related to a specific event
-    List<Notification> findByEvent_Id(String eventId);
+    List<Notification> findByEventId(String eventId);
+
+    List<Notification> findByRecipientId(String userId);
 }
