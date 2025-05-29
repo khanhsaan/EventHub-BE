@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.csci334.EventHub.dto.EventCancelRequestDTO;
 import com.csci334.EventHub.dto.EventCreationDTO;
+import com.csci334.EventHub.dto.EventEditDTO;
 import com.csci334.EventHub.dto.EventOutDTO;
 import com.csci334.EventHub.entity.Event;
 import com.csci334.EventHub.entity.enums.EventType;
@@ -68,10 +69,11 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Event> update(@PathVariable String id,
-            @RequestBody Event event) {
-        // Consider using a DTO here as well for updates
-        return ResponseEntity.ok(svc.update(id, event));
+    public ResponseEntity<Event> updateEvent(
+            @PathVariable String id,
+            @RequestBody EventEditDTO dto) {
+        Event updated = svc.update(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")

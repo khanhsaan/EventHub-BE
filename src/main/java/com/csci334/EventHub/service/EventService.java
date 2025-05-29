@@ -11,12 +11,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.csci334.EventHub.dto.EventCreationDTO;
+import com.csci334.EventHub.dto.EventEditDTO;
 import com.csci334.EventHub.dto.EventOutDTO; // Import the new DTO
 import com.csci334.EventHub.entity.Event;
+import com.csci334.EventHub.entity.Payment;
+import com.csci334.EventHub.entity.Registration;
 import com.csci334.EventHub.entity.User;
 import com.csci334.EventHub.entity.enums.EventStatus;
 import com.csci334.EventHub.entity.enums.EventType;
+import com.csci334.EventHub.entity.enums.RefundStatus;
+import com.csci334.EventHub.entity.enums.RegistrationStatus;
+import com.csci334.EventHub.entity.enums.TicketStatus;
 import com.csci334.EventHub.repository.EventRepository;
+import com.csci334.EventHub.repository.PaymentRepository;
+import com.csci334.EventHub.repository.RegistrationRepository;
 import com.csci334.EventHub.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException; // Import standard JPA exception
@@ -32,14 +40,19 @@ import java.util.stream.Collectors;
 public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final RegistrationRepository registrationRepository;
+    private final PaymentRepository paymentRepository;
     private final PasswordEncoder passwordEncoder;
     private static final Logger log = LoggerFactory.getLogger(EventService.class);
     private final SimpMessagingTemplate messaging;
 
     public EventService(EventRepository eventRepository, UserRepository userRepository,
+            RegistrationRepository registrationRepository, PaymentRepository paymentRepository,
             PasswordEncoder passwordEncoder, SimpMessagingTemplate messagingTemplate) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.registrationRepository = registrationRepository;
+        this.paymentRepository = paymentRepository;
         this.passwordEncoder = passwordEncoder;
         this.messaging = messagingTemplate;
     }
@@ -133,16 +146,33 @@ public class EventService {
     }
 
     @Transactional
-    public Event update(String id, Event updatedEvent) {
+    public Event update(String id, EventEditDTO dto) {
         Event existingEvent = eventRepository.findById(id)
-                // Replace EventNotFoundException with EntityNotFoundException
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + id));
 
-        updatedEvent.setId(id);
+        existingEvent.setTitle(dto.getTitle());
+        existingEvent.setShortDescription(dto.getShortDescription());
+        existingEvent.setDescription(dto.getDescription());
+        existingEvent.setLocation(dto.getLocation());
+        existingEvent.setEventDate(dto.getEventDate());
+        existingEvent.setStartTime(dto.getStartTime());
+        existingEvent.setEndTime(dto.getEndTime());
+        existingEvent.setEventType(dto.getEventType());
+        existingEvent.setImageUrl(dto.getImageUrl());
 
-        Event saved = eventRepository.save(updatedEvent);
+        existingEvent.setGeneralPrice(dto.getGeneralPrice());
+        existingEvent.setVipPrice(dto.getVipPrice());
+        existingEvent.setGeneralTicketLimit(dto.getGeneralTicketLimit());
+        existingEvent.setVipTicketLimit(dto.getVipTicketLimit());
+        existingEvent.setGeneralTicketsRemaining(dto.getGeneralTicketsRemaining());
+        existingEvent.setVipTicketsRemaining(dto.getVipTicketsRemaining());
 
-        // If the updated event is PUBLISHED
+        // ✅ Keep the existing status instead of setting it to null
+        // No change needed here if you're modifying in-place
+
+        Event saved = eventRepository.save(existingEvent);
+
+        // Send WebSocket notifications based on existing status
         if (saved.getStatus() == EventStatus.PUBLISHED) {
             messaging.convertAndSend("/topic/events/published", List.of(saved));
         } else if (saved.getStatus() == EventStatus.IN_PROGRESS) {
@@ -162,7 +192,6 @@ public class EventService {
     public Event cancelEvent(String eventId, String password) {
         // 1. Find the event
         Event event = eventRepository.findById(eventId)
-                // Replace EventNotFoundException with EntityNotFoundException
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
 
         // 2. Get the organizer
@@ -173,27 +202,46 @@ public class EventService {
 
         // 3. Verify the password
         if (!passwordEncoder.matches(password, organizer.getPassword())) {
-            // Replace InvalidCredentialsException with BadCredentialsException
             throw new BadCredentialsException("Incorrect password provided for cancellation.");
         }
 
-        // 4. Check if event is already cancelled or completed (optional)
+        // 4. Check if already cancelled or completed
         if (event.getStatus() == EventStatus.CANCELLED || event.getStatus() == EventStatus.COMPLETED) {
             System.out.println("Event " + eventId + " is already " + event.getStatus() + ". No action taken.");
             return event;
         }
 
-        // 5. Update the status
+        // 5. Cancel the event
         event.setStatus(EventStatus.CANCELLED);
         event.setLastUpdatedAt(LocalDateTime.now());
-
-        // 6. Save the updated event
         eventRepository.save(event);
 
+        // 6. Refund all eligible paid registrations
+        List<Registration> registrations = registrationRepository.findByEventId(eventId);
+        for (Registration reg : registrations) {
+            if (reg.getStatus() == RegistrationStatus.PAID && reg.getAmountDue() > 0) {
+                Payment payment = paymentRepository.findByRegistrationId(reg.getId()).orElse(null);
+                if (payment != null && payment.getStatus().equals("SUCCESS")) {
+                    payment.setStatus("REFUNDED");
+                    payment.setRefundStatus(RefundStatus.COMPLETED);
+                    payment.setRefundReason("Event cancelled by organizer");
+                    payment.setRefundedAt(LocalDateTime.now());
+
+                    reg.setStatus(RegistrationStatus.REFUNDED);
+                    reg.getTicket().setStatus(TicketStatus.REFUNDED);
+
+                    paymentRepository.save(payment);
+                    registrationRepository.save(reg);
+                }
+            }
+        }
+
+        // 7. Notify subscribers
         messaging.convertAndSend("/topic/events/cancelled", List.of(event));
 
         return event;
     }
+
     // --- End Cancel Event Method ---
 
     @Scheduled(cron = "0 * * * * *") // every 5 minute
