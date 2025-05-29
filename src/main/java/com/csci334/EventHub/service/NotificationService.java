@@ -8,6 +8,8 @@ import com.csci334.EventHub.entity.User;
 import com.csci334.EventHub.repository.EventRepository;
 import com.csci334.EventHub.repository.NotificationRepository;
 import com.csci334.EventHub.repository.RegistrationRepository;
+import com.csci334.EventHub.repository.UserRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class NotificationService {
     private final EventRepository eventRepository;
     private final RegistrationRepository registrationRepository;
     private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
@@ -84,6 +87,22 @@ public class NotificationService {
                 .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
         notification.setRead(true);
         notificationRepository.save(notification);
+    }
+
+    public void sendNotification(String userId, String title, String message) {
+        Notification noti = new Notification();
+        noti.setTitle(title);
+        noti.setMessage(message);
+        noti.setSentAt(LocalDateTime.now());
+        noti.setRead(false);
+        noti.setRecipient(userRepository.findById(userId).orElseThrow());
+
+        notificationRepository.save(noti);
+
+        // WebSocket broadcast
+        messagingTemplate.convertAndSend("/topic/notifications/" + userId,
+                new NotificationDTO(noti.getId(), title, message, noti.getSentAt(), false,
+                        noti.getRecipient().getFullName()));
     }
 
     public NotificationDTO convertToDto(Notification n) {

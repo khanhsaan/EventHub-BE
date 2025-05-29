@@ -24,12 +24,15 @@ public class PaymentService {
     private final PaymentRepository paymentRepo;
     private final RegistrationRepository registrationRepo;
     private final EventRepository eventRepo;
+    private final NotificationService notificationService;
 
     public PaymentService(PaymentRepository paymentRepo, RegistrationRepository registrationRepo,
+            NotificationService notificationService,
             EventRepository eventRepo) {
         this.paymentRepo = paymentRepo;
         this.registrationRepo = registrationRepo;
         this.eventRepo = eventRepo;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -100,6 +103,12 @@ public class PaymentService {
         }
 
         registrationRepo.save(reg);
+        notificationService.sendNotification(
+                reg.getAttendee().getId(),
+                "Refund Processed by Organizer",
+                "Your payment for the event \"" + reg.getEvent().getTitle()
+                        + "\" has been refunded by the organizer. Reason: " + reason);
+
         return paymentRepo.save(payment);
     }
 
@@ -146,6 +155,11 @@ public class PaymentService {
         }
 
         registrationRepo.save(reg);
+        notificationService.sendNotification(
+                reg.getAttendee().getId(),
+                "Refund Approved",
+                "Your refund request for the event \"" + reg.getEvent().getTitle()
+                        + "\" has been approved. The payment has been refunded.");
         return paymentRepo.save(payment);
     }
 
@@ -165,6 +179,11 @@ public class PaymentService {
         reg.setStatus(RegistrationStatus.PAID);
 
         registrationRepo.save(reg);
+
+        notificationService.sendNotification(
+                reg.getAttendee().getId(),
+                "Refund Rejected",
+                "Your refund request for the event \"" + reg.getEvent().getTitle() + "\" was rejected.");
         return paymentRepo.save(payment);
     }
 
