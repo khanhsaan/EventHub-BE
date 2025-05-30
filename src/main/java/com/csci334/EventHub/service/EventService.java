@@ -101,7 +101,7 @@ public class EventService {
     }
 
     public List<Event> getByOrganizer(String organizerId) {
-        return eventRepository.findByOrganizer_Id(organizerId);
+        return eventRepository.findByOrganizerId(organizerId);
     }
 
     public List<Event> getUpcoming() {

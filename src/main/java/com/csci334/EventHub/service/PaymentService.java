@@ -1,9 +1,12 @@
 package com.csci334.EventHub.service;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.csci334.EventHub.dto.PaymentMakeDTO;
+import com.csci334.EventHub.dto.analytics.AnalyticsOverviewDTO;
+import com.csci334.EventHub.dto.analytics.SalesEntryDTO;
 import com.csci334.EventHub.entity.Event;
 import com.csci334.EventHub.entity.Payment;
 import com.csci334.EventHub.entity.Registration;
@@ -16,6 +19,7 @@ import com.csci334.EventHub.repository.EventRepository;
 import com.csci334.EventHub.repository.PaymentRepository;
 import com.csci334.EventHub.repository.RegistrationRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -25,13 +29,18 @@ public class PaymentService {
     private final RegistrationRepository registrationRepo;
     private final EventRepository eventRepo;
     private final NotificationService notificationService;
+    private final AnalyticsService analyticsService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public PaymentService(PaymentRepository paymentRepo, RegistrationRepository registrationRepo,
-            NotificationService notificationService,
+            NotificationService notificationService, AnalyticsService analyticsService,
+            SimpMessagingTemplate messagingTemplate,
             EventRepository eventRepo) {
         this.paymentRepo = paymentRepo;
         this.registrationRepo = registrationRepo;
         this.eventRepo = eventRepo;
+        this.analyticsService = analyticsService;
+        this.messagingTemplate = messagingTemplate;
         this.notificationService = notificationService;
     }
 
@@ -78,6 +87,23 @@ public class PaymentService {
         eventRepo.save(event);
         registrationRepo.save(reg);
 
+        SalesEntryDTO dto = new SalesEntryDTO();
+        dto.setDate(LocalDate.now().toString());
+
+        if (reg.getRequestedTicketType() == TicketType.VIP) {
+            dto.setVip(1);
+            dto.setGeneral(0);
+        } else {
+            dto.setVip(0);
+            dto.setGeneral(1);
+        }
+
+        String organizerId = reg.getEvent().getOrganizer().getId();
+        messagingTemplate.convertAndSend("/topic/sales/" + organizerId, dto);
+
+        AnalyticsOverviewDTO overview = analyticsService.getOverview(reg.getEvent().getOrganizer().getId());
+        messagingTemplate.convertAndSend("/topic/analytics/" + organizerId, overview);
+
         return payment;
     }
 
@@ -108,6 +134,8 @@ public class PaymentService {
                 "Refund Processed by Organizer",
                 "Your payment for the event \"" + reg.getEvent().getTitle()
                         + "\" has been refunded by the organizer. Reason: " + reason);
+        AnalyticsOverviewDTO overview = analyticsService.getOverview(reg.getEvent().getOrganizer().getId());
+        messagingTemplate.convertAndSend("/topic/analytics/" + reg.getEvent().getOrganizer().getId(), overview);
 
         return paymentRepo.save(payment);
     }
@@ -160,6 +188,9 @@ public class PaymentService {
                 "Refund Approved",
                 "Your refund request for the event \"" + reg.getEvent().getTitle()
                         + "\" has been approved. The payment has been refunded.");
+
+        AnalyticsOverviewDTO overview = analyticsService.getOverview(reg.getEvent().getOrganizer().getId());
+        messagingTemplate.convertAndSend("/topic/analytics/" + reg.getEvent().getOrganizer().getId(), overview);
         return paymentRepo.save(payment);
     }
 
