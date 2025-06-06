@@ -22,7 +22,7 @@ jobs:
           MYSQL_DATABASE: eventhub_test
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --heath-timeout=5s --health-retries=3
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
       - name: Run tests
         run: ./mvnw clean test
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/eventhub_test
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: root
 
