@@ -1,27 +1,21 @@
-# 🎪 EventHub - Comprehensive Event Management Platform
-
-[![CI/CD Pipeline](https://github.com/your-username/EventHub-BE/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/EventHub-BE/actions/workflows/ci.yml)
-[![Java](https://img.shields.io/badge/Java-17-red.svg)](https://openjdk.java.net/projects/jdk/17/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
-
+# EventHub
 EventHub is a modern, full-featured event management platform built with Spring Boot 3.4.4 and Java 17. It provides comprehensive functionality for event organizers and attendees, including real-time notifications, payment processing, analytics dashboards, and automated event lifecycle management.
 
-## 🌟 Key Features
+## Key Features
 
-### 🎯 Core Event Management
+### Core Event Management
 - **Multi-type Event Support**: Conferences, workshops, seminars, concerts, movies, sports, social events, and more
 - **Dual Ticket Tiers**: General admission and VIP tickets with independent pricing and capacity management
 - **Event Lifecycle Automation**: Automatic status transitions (Published → In Progress → Completed)
 - **Smart Capacity Management**: Real-time ticket availability tracking with automatic updates
 
-### 👥 User Management & Security
+### User Management & Security
 - **Role-Based Access Control**: Three distinct roles (Attendee, Organizer, Admin)
 - **Spring Security Integration**: Secure authentication and authorization
 - **Profile Management**: Complete user profile functionality with secure password updates
 - **6-Digit ID System**: Unique, human-readable identifiers for all entities
 
-### 💳 Advanced Payment System
+### Advanced Payment System
 - **Secure Payment Processing**: Complete payment workflow with transaction tracking
 - **Comprehensive Refund Management**:
   - Organizer-initiated refunds
@@ -30,7 +24,7 @@ EventHub is a modern, full-featured event management platform built with Spring 
   - Multi-status refund tracking (Requested, Approved, Rejected, Completed)
 - **Financial Security**: Card information protection with last-four-digit storage only
 
-### 📊 Real-Time Analytics & Reporting
+### Real-Time Analytics & Reporting
 - **Live Dashboard Metrics**: Revenue tracking, ticket sales, refund statistics
 - **Multi-dimensional Analytics**:
   - Organizer-level insights across all events
@@ -39,13 +33,13 @@ EventHub is a modern, full-featured event management platform built with Spring 
   - Time-series sales data
 - **WebSocket-Powered Updates**: Real-time data streaming every 5 seconds
 
-### 🔔 Intelligent Notification System
+### Intelligent Notification System
 - **Real-Time WebSocket Notifications**: Instant updates via `/topic/notifications/{userId}`
 - **Automated Event Reminders**: Scheduled notifications for registered attendees
 - **Event Lifecycle Alerts**: Cancellation notices, refund confirmations, status updates
 - **Persistent Notification History**: Full audit trail with read/unread status
 
-### 🌐 Real-Time Event Broadcasting
+### Real-Time Event Broadcasting
 - **Live Event Updates**: WebSocket channels for different event states
   - `/topic/events/published` - New events
   - `/topic/events/inprogress` - Currently running events
@@ -53,7 +47,7 @@ EventHub is a modern, full-featured event management platform built with Spring 
   - `/topic/events/cancelled` - Cancelled events
 - **Dynamic Status Management**: Automated transitions based on event timing
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 ### Technology Stack
 ```
@@ -115,7 +109,7 @@ The application uses a comprehensive relational database design:
 - **Tickets**: Digital ticket generation and management
 - **Notifications**: Persistent notification system with WebSocket integration
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
 ### Prerequisites
 - **Java 17** or higher
@@ -161,7 +155,7 @@ spring.datasource.password=your_password
 - WebSocket endpoint available at `ws://localhost:8080/ws`
 - Health check: `GET /api/events` should return an empty array
 
-## 📚 API Documentation
+## API Documentation
 
 ### Authentication Endpoints
 ```http
@@ -216,7 +210,7 @@ PUT  /api/notifications/{id}/read               # Mark as read
 POST /api/notifications/events/{id}/send-reminders # Send reminders
 ```
 
-## 🔌 WebSocket Integration
+## WebSocket Integration
 
 ### Connection Setup
 ```javascript
@@ -260,7 +254,7 @@ stompClient.connect({}, function (frame) {
 - `/topic/sales/{organizerId}` - Live sales data
 - `/topic/analytics/event/{eventId}` - Event-specific analytics
 
-## 🔧 Configuration Guide
+## Configuration Guide
 
 ### Security Configuration
 CORS is configured for frontend integration:
@@ -286,7 +280,7 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
 logging.level.com.csci334.EventHub.service=DEBUG
 ```
 
-## 🧪 Testing Strategy
+## Testing Strategy
 
 ### Running Tests
 ```bash
@@ -309,7 +303,7 @@ spring.datasource.username=root
 spring.datasource.password=root
 ```
 
-## 🚀 CI/CD Pipeline
+## CI/CD Pipeline
 
 The project includes a comprehensive GitHub Actions workflow:
 
@@ -319,12 +313,12 @@ The project includes a comprehensive GitHub Actions workflow:
 3. **Artifact Management**: JAR file storage with SHA-based naming
 
 ### Workflow Features
-- ✅ Multi-branch CI (all branches)
-- ✅ Pull request validation
-- ✅ MySQL 8.0 service container
-- ✅ Maven dependency caching
-- ✅ Build artifact retention (30 days)
-- ✅ Java 17 with Temurin distribution
+- Multi-branch CI (all branches)
+- Pull request validation
+- MySQL 8.0 service container
+- Maven dependency caching
+- Build artifact retention (30 days)
+- Java 17 with Temurin distribution
 
 ### Running CI Locally
 ```bash
@@ -336,7 +330,7 @@ export SPRING_DATASOURCE_PASSWORD=root
 ./mvnw clean test
 ```
 
-## 🎯 Event Lifecycle Management
+## Event Lifecycle Management
 
 ### Automatic Status Transitions
 ```mermaid
@@ -359,7 +353,7 @@ graph LR
 4. **Status Updates**: Registrations and tickets marked accordingly
 5. **Capacity Restoration**: Ticket availability restored
 
-## 📊 Advanced Analytics Features
+## Advanced Analytics Features
 
 ### Real-Time Metrics
 The analytics system provides comprehensive insights:
@@ -379,7 +373,7 @@ The analytics system provides comprehensive insights:
 ### Data Broadcasting
 Analytics data is automatically broadcast every 5 seconds to subscribed clients, enabling real-time dashboard updates without manual refresh.
 
-## 🔐 Security Implementation
+## Security Implementation
 
 ### Authentication & Authorization
 - **Spring Security 6.x**: Modern security framework
@@ -393,7 +387,7 @@ Analytics data is automatically broadcast every 5 seconds to subscribed clients,
 - **Sensitive Data Handling**: Secure storage of payment information
 - **Password Verification**: Event cancellation requires organizer password
 
-## 📈 Performance Optimization
+## Performance Optimization
 
 ### Database Optimization
 - **Lazy Loading**: Efficient entity relationship loading
@@ -405,47 +399,3 @@ Analytics data is automatically broadcast every 5 seconds to subscribed clients,
 - **Maven Dependency Caching**: CI/CD optimization
 - **JPA Second-Level Cache**: Entity caching for performance
 - **WebSocket Connection Reuse**: Efficient real-time communication
-
-## 🤝 Contributing
-
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Code Standards
-- **Java 17 Features**: Use modern Java syntax and features
-- **Spring Boot Best Practices**: Follow Spring conventions
-- **Lombok Integration**: Reduce boilerplate code
-- **Comprehensive Testing**: Maintain test coverage
-- **API Documentation**: Document all endpoints
-
-### Pull Request Requirements
-- ✅ All tests pass
-- ✅ Code follows project conventions
-- ✅ Documentation updated if needed
-- ✅ No security vulnerabilities introduced
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Spring Boot Team**: For the excellent framework
-- **MySQL Community**: For the robust database system
-- **Lombok Project**: For reducing Java boilerplate
-- **GitHub Actions**: For seamless CI/CD integration
-
-## 📞 Support & Contact
-
-For questions, issues, or contributions:
-- **GitHub Issues**: [Create an issue](https://github.com/your-username/EventHub-BE/issues)
-- **Documentation**: This README and inline code comments
-- **Community**: Join discussions in GitHub Discussions
-
----
-
-**EventHub** - Making event management simple, secure, and scalable. 🎪✨
